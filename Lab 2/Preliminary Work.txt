@@ -1,0 +1,231 @@
+CS224
+Lab02
+Section 6
+Can Avşar
+21902111
+
+# CS224 Lab02 Preliminary Work Part 1: Process Static Array
+# Can Avşar
+# 21902111
+
+	# Text segment
+	.text
+	main:
+
+   	la $a0, array        		# Declare the value arr[i] (first item of the array)
+    	lw $a1, arraySize		# Declare the array size
+
+    	jal PrintArray			# Jump to the PrintArray subprogram
+    	
+    	la $a0, array        		# Declare the value arr[i] (first item of the array)
+    	lw $a1, arraySize		# Declare the array size
+    	
+    	jal CheckSymmetric		# Jump to the CheckSymmetric subprogram
+    	
+    	beq $v0, 1, PrintSymmetric 	# Jump to the symmetric to print prompt
+    	beq $v0, 0, PrintNotSymmetric	# Jump to the not symmetric to print prompt
+    	
+    	
+    	PrintSymmetric:
+    	la $a0, promptsymmetric		# Print prompt
+	li $v0, 4 
+	syscall
+	j Next				# Go to the next
+	
+	PrintNotSymmetric:
+    	la $a0, promptnotsymmetric	# Print prompt
+	li $v0, 4 
+	syscall
+	j Next				# Go to the next
+    	
+	Next:
+	
+	la $a0, array        		# Declare the value arr[i] (first item of the array)
+    	lw $a1, arraySize		# Declare the array size
+	jal FindMinMax			# Jump to the FindMinMax subprogram
+	
+	move $t0, $v0
+	move $t1, $v1
+	
+	la $a0, promptmin		# Print prompt
+	li $v0, 4 
+	syscall
+							
+ 	move $a0, $t0			# Print the value
+ 	li $v0, 1
+ 	syscall
+ 	
+ 	la $a0, promptmax		# Print prompt
+	li $v0, 4 
+	syscall
+ 	
+ 	li $v0, 1			# Print the value
+ 	move $a0, $t1
+ 	syscall
+	
+	li $v0, 10             		 # Exit
+    	syscall  
+    
+    
+
+    
+    
+    
+	PrintArray:
+	li $s0, 0			# Initialize the value i to 0
+	move $s1, $a0			# Array first address
+	move $s2, $a1			# ArraySize
+
+	Print:
+	bge  $s0, $s2, EndPrint 	# If the loop passed, go to the next
+    	lw $t1,($s1)			# Pass the first element to a register
+   	
+   	li $v0, 1			# Print the value
+ 	move $a0, $t1
+ 	syscall
+ 	 
+   	la $a0, space			# Print space
+	li $v0, 4 
+	syscall
+	
+    	addi $s1, $s1, 4             	# Go to next element
+    	addi $s0, $s0, 1      		# Increment i (i = i + 1)
+    	j Print              		# Jump back to the loop again
+	EndPrint:
+	jr $ra   			# Jump back to the caller
+	
+	
+	CheckSymmetric:
+	li $s0, 0			# Initialize the value i to 0
+	move $s1, $a0			# Array first address
+	move $s2, $a1			# ArraySize
+    	add $t2, $t2, 2			# This register holds the value 2
+    	add $t4, $t4, 4			# This register holds the value 4
+    	mul $t3, $t4, $s2 		# This operations make the passing from the first element to last element
+    	sub $t3, $t3, $t4		# (arrsize - 1) * 4 = 4 * arrsize - 4 gives us the bits between the first value's address and the last value's address
+   	div $s2, $t2			# This operations sets the limit for  
+    	mflo $t5			# check until the arrsize/2
+    	add $s3, $s1, $t3		# This is the value array[arraySize-1] (last item of the array)
+	
+	Check:
+   	bge  $s0, $t5, Symmetric 	# If the loop passed correctly, it is symmetric
+    	lw $t1,($s1)			# Pass the first element to a register
+    	lw $t2,($s3)			# Pass the last element to a register
+    	bne $t1, $t2, NotSymmetric	# If first and last elements are not equal, array is not symmetric
+    	addi $s1, $s1, 4             	# Make the first element the next element
+    	addi $s3, $s3, -4 		# Make the last element the previous element
+    	addi $s0, $s0, 1      		# Increment i (i = i + 1)
+    	j Check		                # Jump back to the loop again
+	Symmetric:
+	li $v0, 1
+	jr $ra				# Jump back to the caller
+	NotSymmetric:
+	li $v0, 0  
+	jr $ra     			# Jump back to the caller
+	
+	
+	FindMinMax:
+	li $s0, 0			# Initialize the value i to 0
+	move $s1, $a0			# Array first address
+	move $s2, $a1			# ArraySize
+    	lw $s3, ($s1)			# Initialize the value min to first element of the array
+	Find:
+	bge $s0, $s2, EndFind  		# If the loop passed correctly, it is symmetric
+	lw $t1,($s1)			# Pass the first element to a register
+    	slt $t2, $t1, $s3      		# checks if min value > (current element)
+    	beq $t2, $0, Greater		# Check >
+    	j NotGreater			# jump to NotGreater if the value is not greater
+    	
+    	Greater:
+    	j FindMax			# Jump back to the caller
+    	
+    	NotGreater:
+    	add $s3, $0, $t1		# Set the value min to other element of the array
+    	j FindMax			# Jump back to the caller
+    	
+    	FindMax:
+    	slt $t2, $t1, $s4      		# checks if min value > (current element)
+    	beq $t2, 1, Less		# Check >
+    	j NotLess			# Jump to NotGreater if the value is not greater
+    	
+    	Less:
+    	j Increment			# Jump to Increment
+    	
+    	NotLess:
+    	add $s4, $0, $t1		# Set the value max to other element of the array
+    	j Increment			# Jump to Increment
+    		
+    	
+    	
+    	Increment:
+    	add $s1, $s1, 4             	# Make the first element the next element
+    	addi $s0, $s0, 1      	 	# Increment i (i = i + 1)
+    	j Find				# Jump to the loop again
+    	
+    	EndFind:
+    	move $v0, $s3			# Set min to v0
+    	move $v1, $s4			# Set max to v0
+    	jr $ra				# Jump back to the caller
+	
+	
+	# Data segment
+	.data    
+	promptnotsymmetric:.asciiz "\nThe array above is not symmetric."
+	promptsymmetric: .asciiz "\nThe array above is symmetric "
+	promptmin: .asciiz "\nMin value: "
+	promptmax: .asciiz "\nMax value: "
+	array:  .word 2, 1, 3, 3, 1, 2   	# Determining the array elements
+	arraySize: .word 6			# Determining the array size
+	space: .asciiz " "  			# Space
+
+
+
+---------------------------------------------------------------------------------
+
+
+# CS224 Lab02 Preliminary Work Part 2: Reverse Bits of a Number
+# Can Avşar
+# 21902111
+
+	# Text segment
+	.text
+	
+	main:
+	
+	
+	addi $a0, $0, 0xACCA2112	# Number
+	jal inverse
+	move $a0, $v0                 	# Move number into a register
+    	li $v0, 34			# Print hexadecimal
+    	syscall                         	# issue the syscall
+	
+	li $v0, 10			# syscall number for "print hex"
+    	syscall
+	
+	inverse:
+	li $s0, 0			# Initialize the value i to 0
+	addi $t5, $0, 31		# Set Number of bits - 1 to a register
+	addi $t4, $0, 1			# Set 1 to a register
+	sllv $t3, $t4, $t5		# The number with 1 in its most significant bit (10000..000)
+	addi $s3, $0, 0			# Reversed number
+	loop:
+	bge  $s0, $t5, end_loop 	# If the loop passed, go to the next
+	sub $t1, $t5, $s0		# The value j is Number of Bits - 1 - i
+	sllv $t2, $a0, $t1		# Left shift the number by j and pass it to temp number t2
+	and $t2, $t2, $t3		# AND temp number with (1000..000)
+	srlv $t2, $t2, $s0		# Right shift the bit we want by i,to right to its place
+	or $s3, $s3, $t2		# OR reversed number with temp number to move the bits in its right place
+ 	add $s0, $s0, 1			# Increment i by 1
+    	j loop                		# Jump back to the loop again
+    	end_loop:
+    	
+    	
+    	move $v0, $s3			# Move reversed number to v0
+	jr $ra				# Return to caller
+	  	
+    
+	# Data segment
+	.data
+	space: .asciiz " "  			# Space
+	tab: .asciiz "               "  	# Tab
+	endl:  .asciiz "\n"			# End line 
