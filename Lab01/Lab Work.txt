@@ -1,0 +1,243 @@
+Can Avşar
+21902111
+CS224-06
+LAB01 
+
+# CS224 Lab01 Part 3: Arrays
+# Can Avşar
+# 21902111
+
+	# Text segment
+	.text
+	
+   	li  $s0, 0			# Initialize the value i to 0
+    	lw  $t7, arrsize		# Declare the array size to a register
+    	add $t3, $t3, 2			# This register holds the value 2
+    	add $t5, $t5, 4			# This register holds the value 4
+    	mul $t6, $t5, $t7  		# This operations make the passing from the first element to last element
+    	sub $t6, $t6, $t5		# (arrsize - 1) * 4 = 4 * arrsize - 4 gives us the bits between first and last value's address
+   	div $t7, $t3			# This operations sets the limit for checking until the arrsize/2  
+    	mflo $t4
+   	la $s2, arr        		# This is the value arr[i] (first item of the array)
+    	add $s3, $s2, $t6		# This is the value arr[arrsize-1] (last item of the array)
+    
+    	la $a0, header1         	# Print header1
+    	li $v0, 4        		               
+   	syscall
+   	la $a0, header2         	# Print header2
+    	li $v0, 4        		               
+   	syscall
+   	la $a0, header3         	# Print header3
+    	li $v0, 4        		               
+   	syscall
+    
+	PRINT:
+	bge  $s0, $t7, END_PRINT 	# If the loop passed, go to the next
+    	lw $t1,($s2)			# Pass the first element a to a register
+	li $v0, 34			# Print the memory address
+ 	add $a0, $zero, $s2
+ 	syscall 
+ 	la $a0, tab         		# Print a tab for seperation
+    	li $v0, 4        		               
+   	syscall
+   	li $v0, 1			# Print the value on index
+ 	move $a0, $t1
+ 	syscall 
+   	la $a0,endl			# Print a new line
+	li $v0,4
+	syscall
+    	addi $s2, $s2, 4             	# Go to next element
+    	addi    $s0, $s0, 1      	# Increment i (i = i + 1)
+    	j PRINT                		# Jump back to the loop again
+	END_PRINT:
+	la $a0,endl			# Print a new line
+	li $v0,4
+	syscall
+	la $s2, arr        		# Initialize arr[i] again after the print
+	li $s0, 0			# Initialize the value i to 0 again after the print
+	
+	FIND_AVERAGE:
+	li  $s4, 0			# Initialize the value total to 0
+	SUM_LOOP:
+	bge  $s0, $t7, END_SUM_LOOP  	# If the loop passed correctly, it is symmetric
+    	lw $t1,($s2)			# Pass the first element to a register
+    	add $s4, $s4, $t1 
+    	add $s2, $s2, 4             	# Make the first element the next element
+    	addi $s0, $s0, 1      	 	# Increment i (i = i + 1)
+    	j SUM_LOOP
+    	
+    	END_SUM_LOOP:
+    	div $s4, $t7			# Calculate the average
+    	mflo $s5
+    	la $s2, arr        		# Initialize arr[i] again after finding the average
+    	li $s0, 0			# Initialize the value i to 0 again after finding the average
+    	lw $t1,($s2)			# Pass the first element to a register
+    	add $s7, $0, $t1		# Initialize the value min to first element of the array
+    	
+    	FIND_MAX:
+	bge $s0, $t7, END_FIND_MAX  	# If the loop passed correctly, it is symmetric
+	lw $t1,($s2)			# Pass the first element to a register
+    	slt $t8, $t1, $s7      		# checks if $s6 (min) > $s2 (next element)
+    	beq $t8, $0, greater		# Check $s2 > $s6
+    	j not_greater			# jump to not_greater if the value is not greater
+    	greater:
+    	add $s7, $0, $t1		# Set the value min to other element of the array
+    	not_greater:
+    	add $s2, $s2, 4             	# Make the first element the next element
+    	addi $s0, $s0, 1      	 	# Increment i (i = i + 1)
+    	j FIND_MAX
+    	
+    	END_FIND_MAX:
+    	la $s2, arr        		# Initialize arr[i] again
+    	li $s0, 0			# Initialize the value i to 0 again after finding the average
+    	lw $t1,($s2)			# Pass the first element to a register
+    	add $s6, $0, $t1		# Initialize the value max to first element of the array
+    	
+    	FIND_MIN:
+	bge $s0, $t7, END_FIND_MIN  	# If the loop passed correctly, it is symmetric
+	lw $t1,($s2)			# Pass the first element to a register
+    	slt $t8, $t1, $s6      		# checks if $s6 (min) > $s2 (next element)
+    	beq $t8, 1, less		# Check $s2 < $s6
+    	j not_less			# jump to not_less if the value is not less
+    	less:
+    	add $s6, $0, $t1		# Set the value min to other element of the array
+    	not_less:
+    	add $s2, $s2, 4             	# Make the first element the next element
+    	addi $s0, $s0, 1      	 	# Increment i (i = i + 1)
+    	j FIND_MIN
+    	END_FIND_MIN:
+    	
+   	la $a0, average			# Print average prompt
+	li $v0,4
+	syscall	
+   	li $v0, 1			# Print the value
+ 	move $a0, $s5
+ 	syscall 
+ 	la $a0,endl			# Print a new line
+	li $v0,4
+	syscall
+	la $a0, maximum			# Print maximum prompt
+	li $v0,4
+	syscall	
+   	li $v0, 1			# Print the value
+ 	move $a0, $s7
+ 	syscall 
+ 	la $a0,endl			# Print a new line
+	li $v0,4
+	syscall
+   	la $a0, minimum			# Print minimum prompt
+	li $v0,4
+	syscall	
+   	li $v0, 1			# Print the value
+ 	move $a0, $s6
+ 	syscall 
+	
+	END:
+    	li $v0, 10			# End program
+    	syscall                   
+    
+	# Data segment
+	.data 
+	
+	arr:  .word -10, -5, -5, -3, 2   	# Determining the array elements
+	arrsize: .word 5			# Determining the array size
+	minimum: .asciiz "Min: "
+	maximum: .asciiz "Max: "
+	average: .asciiz "Average: "
+	header1: .asciiz "Memory Address       Array Element \n"
+	header2: .asciiz "Position (hex)        Value (int) \n"
+	header3: .asciiz "==============       ============== \n"
+	prompt:	.asciiz "The array above is not symmetric."
+	prompt2: .asciiz "The array above is symmetric "
+	space: .asciiz " "  			# Space
+	tab: .asciiz "                "  	# Tab
+	endl:  .asciiz "\n"			# End line 
+
+------------------------------------------------------------------------
+
+# CS224 Lab01 Part 2: Calculate
+# Can Avşar
+# 21902111
+	
+	# Text segment
+	.text
+
+	#la $a0, prompt1	# Print a prompt to get the value A
+	#li $v0, 4
+	#syscall
+	#li $v0, 5		# Read the value A from the user
+	#syscall
+	#move $t0, $v0		# Pass the value A to a register
+	
+	#la $a0,endl		# Print a new line
+	#li $v0,4	
+	#syscall
+	
+	la $a0, prompt2		# Print a prompt to get the value B
+	li $v0, 4
+	syscall
+	li $v0, 5		# Read the value B from the user
+	syscall
+	move $t1, $v0		# Pass the value B to a register
+	
+	la $a0,endl		# Print a new line
+	li $v0,4		
+	syscall
+	
+	la $a0, prompt3		# Print a prompt to get the value C
+	li $v0, 4
+	syscall
+	li $v0, 5		# Read the value C from the user
+	syscall
+	move $t2, $v0		# Pass the value C to a register
+	
+	la $a0,endl		# Print a new line
+	li $v0,4	
+	syscall
+	
+	la $a0, prompt4		# Print a prompt to get the value D
+	li $v0, 4
+	syscall
+	li $v0, 5		# Read the value D from the user
+	syscall
+	move $t3, $v0		# Pass the value D to a register
+	
+	la $a0, endl		# Print a new line
+	li $v0, 4
+	syscall
+	
+	
+	
+	mul $t4, $t1, $t2	# B * C
+	
+	div $t4, $t3		
+	mflo $t5		# (B * C) / D
+	
+	sub $t6, $t3, $t2	# D - C
+	
+	div $t6, $t1		
+	mfhi $t7		# (D - C) % B
+	
+	add $t8, $t5, $t7	# (B * C) / D + (D - C) % B
+	
+	la $a0, prompt5		# Print a string before displaying the result
+	li $v0, 4
+	syscall
+	
+	li $v0, 1		# Print the result
+ 	move $a0, $t8
+ 	syscall 
+
+    	li $v0, 10		# End program
+    	syscall                   
+    
+
+	# Data segment
+	
+	.data    
+	#prompt1: .asciiz "Please enter the value A: "
+	prompt2: .asciiz "Please enter the value B: "
+	prompt3: .asciiz "Please enter the value C: "
+	prompt4: .asciiz "Please enter the value D: "
+	prompt5: .asciiz "The result of A = (B * C) / D + (D - C) % B is "
+	endl:	 .asciiz "\n"

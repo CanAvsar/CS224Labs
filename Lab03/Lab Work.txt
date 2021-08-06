@@ -1,0 +1,379 @@
+CS224-6
+Lab03
+Can Avşar
+21902111
+
+# CS224 Lab03
+# Part 3,4,5: Linked Lists and Recursion
+# March 5, 2021
+# Can Avşar
+# 21902111
+	
+	# Text segment
+	.text
+	
+	li	$a0, 10 		# Create a linked list with 10 nodes
+	jal	createLinkedList
+	move	$s0, $v0		# Pass the beginning address of the original linked list
+	la	$a0, original		# Print line seperator
+	li	$v0, 4
+	syscall
+	move	$a0, $s0		# Print original list
+	jal 	printLinkedList
+	
+	
+	la	$a0, line		# Create and print recursively reversed list data
+	li	$v0, 4
+	syscall
+	la	$a0, prompt		# Print prompt
+	li	$v0, 4
+	syscall
+	move	$a0, $s0
+	jal	printReversed
+	la	$a0, endline		
+	li	$v0, 4
+	syscall
+	la	$a0, line		
+	li	$v0, 4
+	syscall
+	
+	la	$a0, recursive		# Create and print recursively duplicated list
+	li	$v0, 4
+	syscall
+	move	$a0, $s0		
+	jal	duplicateRecursive
+	move	$a0, $v0		
+	jal 	printLinkedList
+	la	$a0, line		
+	li	$v0, 4
+	syscall
+	
+	la	$a0, iterative		# Create and print iteratively duplicated list
+	li	$v0, 4
+	syscall
+	move	$a0, $s0
+	jal	duplicateList
+	move	$a0, $v0		
+	jal 	printLinkedList
+	la	$a0, line	
+	li	$v0, 4
+	syscall
+	
+	li	$v0, 10			# Exit the program
+	syscall
+	
+	
+
+createLinkedList:
+	addi	$sp, $sp, -24
+	sw	$s0, 20($sp)
+	sw	$s1, 16($sp)
+	sw	$s2, 12($sp)
+	sw	$s3, 8($sp)
+	sw	$s4, 4($sp)
+	sw	$ra, 0($sp) 	# Save $ra just in case we may want to call a subprogram
+	
+	move	$s0, $a0	# Pass number of nodes to be created ($a0) to $s0
+	li	$s1, 1		# $s1 holds the node count
+	
+	li	$a0, 8		# Create the first header node
+	li	$v0, 9		# Syscall 9 is used for dynamic store allocation
+	syscall
+	
+	move	$s2, $v0	# $s2 points to the first to last node of the linked list
+	move	$s3, $v0	# $s3 now points to the list head
+	sll	$s4, $s1, 2	# Node 1 data value will be 4, node i data value will be 4*i
+	sw	$s4, 4($s2)	# Store the data value.
+	
+addNode:
+
+	beq	$s1, $s0, allDone	# Number of nodes created compared with nodes to be created.
+	addi	$s1, $s1, 1		# Increment node counter.
+	
+	li	$a0, 8 			# Node size is 8 bytes.
+	li	$v0, 9
+	syscall
+
+	sw	$v0, 0($s2)		# Connect the this node to the lst node pointed by $s2.
+
+	move	$s2, $v0		# Make $s2 points to the new node.
+	sll	$s4, $s1, 2		# Node 1 data value will be 4, node i data value will be 4*i
+	sw	$s4, 4($s2)		# Store the data value.
+	j	addNode
+allDone:
+	sw	$zero, 0($s2)	# The last node is pointed by $s2 and make sure it contains 0
+	move	$v0, $s3	# Now $v0 points and returns to the list head ($s3)
+	
+	lw	$ra, 0($sp)	# Restore the register values
+	lw	$s4, 4($sp)
+	lw	$s3, 8($sp)
+	lw	$s2, 12($sp)
+	lw	$s1, 16($sp)
+	lw	$s0, 20($sp)
+	addi	$sp, $sp, 24
+	
+	jr	$ra
+
+
+printReversed:
+	addi	$sp, $sp, -20	# Save $s registers used
+	sw	$s0, 16($sp)
+	sw	$s1, 12($sp)
+	sw	$s2, 8($sp)
+	sw	$s3, 4($sp)
+	sw	$ra, 0($sp) 	# Save $ra just in case we may want to call a subprogram
+	move 	$s0, $a0	# $s0 points to the current node because $a0 points to the linked list
+
+	lw 	$s1, 0($s0)	# $s1 is address of next node (print in hex)
+	lw 	$s2, 4($s0)	# $s2 is data field value of current node (print in decimal)
+	li   	$s3, 0
+
+	bne 	$s1, $zero, Else
+	
+	addi 	$sp, $sp, 20	# Release space on the stack
+	jr 	$ra
+	
+	Else:
+	move	$a0, $s1	# Consider next node.
+	
+	jal printReversed	# Recursive function call
+	
+	move	$a0, $s2	# $s2 is data of current node
+	li	$v0, 1		
+	syscall	
+	
+	la	$a0, space	# Print line seperator
+	li	$v0, 4
+	syscall	
+	
+	lw	$ra, 0($sp)	# Restore the register values
+	lw	$s3, 4($sp)
+	lw	$s2, 8($sp)
+	lw	$s1, 12($sp)
+	lw	$s0, 16($sp)
+	
+	addi	$sp, $sp, 20
+	jr	$ra
+
+
+duplicateList:
+
+	addi	$sp, $sp, -20
+	sw	$s0, 16($sp)
+	sw	$s1, 12($sp)
+	sw	$s2, 8($sp)
+	sw	$s4, 4($sp)
+	sw	$ra, 0($sp) 	# Save $ra just in case we may want to call a subprogram		
+
+	# Pass the beginning of the original list into a variable
+	
+	move $s0, $a0		# $s0 now has the original list beginning address
+	
+	# Allocate the first 8 bytes of the new list
+	
+	li	$a0, 8		# Create the first header node
+	li	$v0, 9		# Syscall 9 is used for dynamic store allocation
+	syscall
+	
+	# Get and pass the beginning of the duplicated array into a variable
+	
+	move	$s2, $v0	# $s2 now has the duplicated list beginning address
+	move	$s3, $v0	# $s3 also now has the same but remains unchanged for returning
+	
+	# Make a loop to duplicate
+	duplicate:
+	
+	# Get the address of next node of original array
+		
+	lw	$s1, 0($s0)		# $s1 now has the next node on the original list 
+		
+	# Pass the data from original node to duplicated node's 4 to 8 bits
+		
+	lw	$s4, 4($s0)		# $s4 now has the data from original node
+	sw	$s4, 4($s2)		# Store this data value to duplicated node
+	
+	# Loop should be done if the next node in original list is 0 
+		
+	beq	$s1, $zero, done
+	
+	# Allocate 8 bytes for a new node
+		
+	li	$a0, 8		# Create the first header node
+	li	$v0, 9		# Syscall 9 is used for dynamic store allocation
+	syscall
+		
+	# Make this node's address go to first node's 0 to 4 bits
+		
+	sw	$v0, 0($s2)		# Connect the this node to the lst node pointed by $s2.
+	move	$s2, $v0		# Make $s2 points to the new node.
+				
+	# Go to the next node on the original list
+		
+	move 	$s0, $s1
+		
+	# Go to the beginning
+	j 	duplicate
+	
+	done:
+	# Return new list's beginning address in $v0
+	sw	$zero, 0($s2)	# The last node is pointed by $s2 and make sure it contains 0
+	move 	$v0, $s3
+	
+	lw	$s0, 16($sp)
+	lw	$s1, 12($sp)
+	lw	$s2, 8($sp)
+	lw	$s4, 4($sp)
+	lw	$ra, 0($sp) 	# Save $ra just in case we may want to call a subprogram
+	addi	$sp, $sp, 20	
+	jr 	$ra
+			
+		
+	duplicateRecursive:
+	addi	$sp, $sp, -20
+	sw	$s0, 16($sp)
+	sw	$s1, 12($sp)
+	sw	$s2, 8($sp)
+	sw	$s4, 4($sp)
+	sw	$ra, 0($sp) 		# Save $ra just in case we may want to call a subprogram
+	
+	move 	$s0, $a0		# $s0 now has the original list beginning address
+	
+	lw	$s1, 0($s0)		# $s1 now has the next node on the original list 
+	
+	li	$a0, 8			# Create the first header node
+	li	$v0, 9			# Syscall 9 is used for dynamic store allocation
+	syscall
+
+	move	$s2, $v0		# Make $s2 points to the new node.
+	
+	lw	$s4, 4($s0)		# $s4 now has the data from original node
+	sw	$s4, 4($s2)		# Store this data value to duplicated node
+	
+	bne 	$s1, $zero, else
+
+	sw	$zero, 0($s2)		# The last node is pointed by $s2 and make sure it contains 0
+	
+	
+	move	$v0, $s2
+	addi 	$sp, $sp, 20
+	jr 	$ra
+	
+	else:
+	move 	$a0, $s1 		# not s0, but a0 because of the function call
+	jal 	duplicateRecursive
+	
+	sw	$v0, 0($s2)		# Connect the this node to the lst node pointed by $s2.
+	
+	move 	$v0, $s2
+	
+	
+	lw	$s0, 16($sp)
+	lw	$s1, 12($sp)
+	lw	$s2, 8($sp)
+	lw	$s4, 4($sp)
+	lw	$ra, 0($sp) 	# Save $ra just in case we may want to call a subprogram
+	addi	$sp, $sp, 20	
+	jr 	$ra
+	
+	
+	
+
+
+
+
+
+
+
+printLinkedList:
+# Print linked list nodes in the following format
+# --------------------------------------
+# Node No: xxxx (dec)
+# Address of Current Node: xxxx (hex)
+# Address of Next Node: xxxx (hex)
+# Data Value of Current Node: xxx (dec)
+# --------------------------------------
+
+
+	addi	$sp, $sp, -20	# Save $s registers used
+	sw	$s0, 16($sp)
+	sw	$s1, 12($sp)
+	sw	$s2, 8($sp)
+	sw	$s3, 4($sp)
+	sw	$ra, 0($sp) 	# Save $ra just in case we may want to call a subprogram
+
+# $a0: points to the linked list.
+
+	move $s0, $a0	# $s0 points to the current node because $a0 points to the linked list
+	li   $s3, 0	# $s3 is node counter: 1, 2, ...
+	li $s7, 0
+printNextNode:
+	beq	$s0, $zero, printedAll
+	beq	$s7, 10, printedAll	# My recursive method is not stopping, so printing needs a limit
+	addi 	$s7, $s7, 1
+	
+				# $s0 is address of current node (print in hex)
+	lw	$s1, 0($s0)	# $s1 is address of next node	(print in hex)
+	lw	$s2, 4($s0)	# $s2 is data field value of current node (print in decimal)
+	addi	$s3, $s3, 1
+
+
+	la	$a0, line	# Print line seperator
+	li	$v0, 4
+	syscall		
+	
+	la	$a0, nodeNumberLabel	# Print prompt
+	li	$v0, 4
+	syscall
+	
+	move	$a0, $s3	# $s3 is node number (position) of current node
+	li	$v0, 1
+	syscall
+	
+	la	$a0, addressOfCurrentNodeLabel	# Print prompt
+	li	$v0, 4
+	syscall
+	
+	move	$a0, $s0	# $s0 is address of current node
+	li	$v0, 34
+	syscall
+
+	la	$a0, addressOfNextNodeLabel	# Print prompt
+	li	$v0, 4
+	syscall
+	move	$a0, $s1	# $s1 is address of next node
+	li	$v0, 34
+	syscall	
+	
+	la	$a0, dataValueOfCurrentNode	# Print prompt
+	li	$v0, 4
+	syscall
+		
+	move	$a0, $s2	# $s2 is data of current node
+	li	$v0, 1		
+	syscall	
+
+	move	$s0, $s1	# Consider next node.
+	j	printNextNode
+printedAll:
+
+	lw	$ra, 0($sp)	# Restore the register values
+	lw	$s3, 4($sp)
+	lw	$s2, 8($sp)
+	lw	$s1, 12($sp)
+	lw	$s0, 16($sp)
+	addi	$sp, $sp, 20
+	jr	$ra
+	
+	# Data segment
+	.data
+	original:.asciiz "\n Original linked list: \n"
+	recursive:.asciiz "\n \nRecursively duplicated list: \n"
+	iterative:.asciiz "\n \nIteratively duplicated list: \n"
+	space:.asciiz " "
+	endline:.asciiz "\n"
+	line:.asciiz "\n --------------------------------------"
+	prompt:.asciiz "\n \nReverse print: \n "
+	nodeNumberLabel:.asciiz	"\n Node No.: "
+	addressOfCurrentNodeLabel:.asciiz	"\n Address of Current Node: "
+	addressOfNextNodeLabel:.asciiz	"\n Address of Next Node: "
+	dataValueOfCurrentNode:.asciiz	"\n Data Value of Current Node: "
